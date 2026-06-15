@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2027 年曆 預購登記</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, 'Helvetica Neue', Arial, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: #f5f4f0;
+            color: #1a1a1a;
+            padding: 20px;
+        }
+
+        .container { max-width: 680px; margin: 0 auto; }
+
+        /* Loading */
+        .loading-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+        .loading-text { font-size: 14px; color: #bbb; letter-spacing: 3px; }
+
+        /* 標題 */
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+            border-bottom: 1px solid #e0ddd8;
+            margin-bottom: 28px;
+        }
+        header h1 { font-size: 26px; font-weight: 300; letter-spacing: 6px; }
+        header p  { margin-top: 8px; font-size: 13px; color: #999; letter-spacing: 1px; }
+
+        /* 卡片通用 */
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 22px 24px;
+            margin-bottom: 20px;
+        }
+        .card-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            color: #aaa;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        /* 顧客資料 */
+        .field { margin-bottom: 14px; }
+        .field:last-child { margin-bottom: 0; }
+        .field label { display: block; font-size: 13px; color: #777; margin-bottom: 6px; }
+        .field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0ddd8;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fafaf8;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .field input:focus { border-color: #8b7355; }
+
+        /* 進度條 */
+        .quota-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .quota-wrap span { font-size: 14px; color: #777; }
+        .quota-num { font-size: 22px; font-weight: 600; }
+        .quota-num.full { color: #c0392b; }
+        .quota-track {
+            height: 4px;
+            background: #ece9e4;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .quota-fill {
+            height: 100%;
+            background: #8b7355;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* 品項標題 */
+        .product-title {
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #f0ede8;
+            margin-bottom: 18px;
+        }
+
+        /* 款式網格 */
+        .variants { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .variant-card {
+            border: 1px solid #e0ddd8;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: opacity 0.3s;
+        }
+        .variant-card.sold-out { opacity: 0.55; }
+
+        /* 圖片區 */
+        .v-img {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #ede9e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .v-img img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .v-img img.loaded { display: block; }
+        .v-img-text { font-size: 12px; color: #c0b9ae; text-align: center; line-height: 1.8; }
+        .soldout-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.72);
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #999;
+        }
+        .variant-card.sold-out .soldout-overlay { display: flex; }
+
+        /* 款式資訊 */
+        .v-info { padding: 10px 10px 12px; }
+        .v-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+        .v-stock { font-size: 11px; color: #bbb; margin-bottom: 10px; }
+        .v-stock.low { color: #e67e22; }
+        .v-stock.empty { color: #ccc; }
+
+        /* 數量控制 */
+        .qty-ctrl { display: flex; align-items: center; gap: 8px; }
+        .qty-btn {
+            width: 28px; height: 28px;
+            border: 1px solid #e0ddd8;
+            border-radius: 6px;
+            background: #fafaf8;
+            font-size: 16px;
+            line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .qty-btn:hover:not(:disabled) { border-color: #8b7355; background: #f5f0ea; }
+        .qty-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+        .qty-num { font-size: 15px; font-weight: 500; min-width: 18px; text-align: center; }
+
+        /* 送出 */
+        .submit-area { padding: 4px 0 44px; }
+        .error-msg {
+            font-size: 13px; color: #c0392b;
+            margin-bottom: 12px;
+            display: none;
+            padding: 10px 14px;
+            background: #fdf0ef;
+            border-radius: 8px;
+        }
+        .submit-btn {
+            width: 100%; padding: 16px;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .submit-btn:hover:not(:disabled) { background: #333; }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 成功畫面 */
+        .success-screen {
+            display: none;
+            text-align: center;
+            background: #fff;
+            border-radius: 14px;
+            padding: 48px 32px;
+        }
+        .success-screen h2 { font-size: 22px; font-weight: 300; letter-spacing: 4px; margin-bottom: 16px; }
+        .success-screen .detail { font-size: 14px; color: #555; line-height: 2; }
+        .success-screen .note { margin-top: 20px; font-size: 13px; color: #bbb; }
+
+        @media (max-width: 420px) {
+            .variants { gap: 8px; }
+            .v-info { padding: 8px 8px 10px; }
+            .qty-btn { width: 26px; height: 26px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Loading -->
+    <div class="loading-wrap" id="loading-wrap">
+        <div class="loading-text">載入中</div>
+    </div>
+
+    <!-- 主表單 -->
+    <div id="app" style="display:none">
+
+        <header>
+            <h1>2027 年曆</h1>
+            <p>預購登記 · 每人上限 5 本</p>
+        </header>
+
+        <div id="form-wrap">
+
+            <div class="card">
+                <div class="card-label">聯絡資料</div>
+                <div class="field">
+                    <label>姓名</label>
+                    <input type="text" id="inp-name" placeholder="請輸入姓名">
+                </div>
+                <div class="field">
+                    <label>電話</label>
+                    <input type="tel" id="inp-phone" placeholder="請輸入手機號碼">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="quota-wrap">
+                    <span>已選數量</span>
+                    <div>
+                        <span class="quota-num" id="quota-num">0</span>
+                        <span style="font-size:14px; color:#ccc"> / 5</span>
+                    </div>
+                </div>
+                <div class="quota-track">
+                    <div class="quota-fill" id="quota-fill" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div id="products"></div>
+
+            <div class="submit-area">
+                <div class="error-msg" id="error-msg"></div>
+                <button class="submit-btn" id="submit-btn" onclick="submitForm()">確認送出</button>
+            </div>
+
+        </div>
+
+        <div class="success-screen" id="success-screen">
+            <h2>登記完成</h2>
+            <div class="detail" id="success-detail"></div>
+            <div class="note">感謝您的預購，我們會與您聯繫確認。</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  填入你的 Google Apps Script Web App URL
+const API_URL = '';
+// ═══════════════════════════════════════════════════════════
+
+const LIMIT = 5;
+
+const PRODUCTS = [
+    { id: 'notebook', name: '品相筆記本' },
+    { id: 'desk_cal', name: '大桌曆' },
+    { id: 'wall_cal', name: '大年曆' },
+    { id: 'mini_cal', name: '小掛曆' },
+];
+
+const VARIANTS = ['A', 'B', 'C'];
+
+const stock  = {};
+const chosen = {};
+
+PRODUCTS.forEach(p => {
+    stock[p.id]  = {};
+    chosen[p.id] = {};
+    VARIANTS.forEach(v => {
+        stock[p.id][v]  = 10;
+        chosen[p.id][v] = 0;
+    });
+});
+
+// ── 工具 ──────────────────────────────────────────────────
+function totalChosen() {
+    let t = 0;
+    PRODUCTS.forEach(p => VARIANTS.forEach(v => { t += chosen[p.id][v]; }));
+    return t;
+}
+function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+function clearError() {
+    document.getElementById('error-msg').style.display = 'none';
+}
+
+// ── 更新 UI ───────────────────────────────────────────────
+function refreshAll() {
+    const total = totalChosen();
+
+    const numEl = document.getElementById('quota-num');
+    numEl.textContent = total;
+    numEl.className = 'quota-num' + (total >= LIMIT ? ' full' : '');
+    document.getElementById('quota-fill').style.width = (total / LIMIT * 100) + '%';
+
+    PRODUCTS.forEach(p => {
+        VARIANTS.forEach(v => {
+            const s = stock[p.id][v];
+            const c = chosen[p.id][v];
+            const soldOut = (s <= 0);
+
+            document.getElementById('card-' + p.id + '-' + v)
+                .classList.toggle('sold-out', soldOut);
+
+            const stockEl = document.getElementById('stock-' + p.id + '-' + v);
+            if (soldOut) {
+                stockEl.textContent = '額滿';
+                stockEl.className = 'v-stock empty';
+            } else if (s <= 3) {
+                stockEl.textContent = '剩餘 ' + s + ' 本';
+                stockEl.className = 'v-stock low';
+            } else {
+                stockEl.textContent = '剩餘 ' + s + ' 本';
+                stockEl.className = 'v-stock';
+            }
+
+            document.getElementById('qty-' + p.id + '-' + v).textContent = c;
+            document.getElementById('minus-' + p.id + '-' + v).disabled = (c <= 0);
+            document.getElementById('plus-' + p.id + '-' + v).disabled =
+                soldOut || (c >= s) || (total >= LIMIT);
+        });
+    });
+}
+
+// ── 調整數量 ──────────────────────────────────────────────
+function adjust(pid, v, delta) {
+    const s = stock[pid][v];
+    const c = chosen[pid][v];
+    const total = totalChosen();
+
+    if (delta > 0) {
+        if (s <= 0)         { showError('此款式已額滿'); return; }
+        if (c >= s)         { showError('此款式庫存不足'); return; }
+        if (total >= LIMIT) { showError('每人上限 ' + LIMIT + ' 本，已達上限'); return; }
+        chosen[pid][v]++;
+    } else {
+        if (c <= 0) return;
+        chosen[pid][v]--;
+    }
+    clearError();
+    refreshAll();
+}
+
+// ── 送出 ──────────────────────────────────────────────────
+async function submitForm() {
+    const name  = document.getElementById('inp-name').value.trim();
+    const phone = document.getElementById('inp-phone').value.trim();
+    const total = totalChosen();
+
+    if (!name)       { showError('請輸入姓名'); return; }
+    if (!phone)      { showError('請輸入電話'); return; }
+    if (total === 0) { showError('請至少選擇 1 本'); return; }
+    if (total > LIMIT) { showError('超過上限 ' + LIMIT + ' 本，請調整數量'); return; }
+
+    for (const p of PRODUCTS) {
+        for (const v of VARIANTS) {
+            if (chosen[p.id][v] > stock[p.id][v]) {
+                showError(p.name + ' 款式 ' + v + ' 庫存不足，請重新調整');
+                return;
+            }
+        }
+    }
+
+    clearError();
+
+    const items = [];
+    PRODUCTS.forEach(p => {
+        VARIANTS.forEach(v => {
+            if (chosen[p.id][v] > 0) {
+                items.push({ pid: p.id, v: v, qty: chosen[p.id][v] });
+            }
+        });
+    });
+
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '處理中...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ name, phone, items })
+        });
+        const result = await res.json();
+
+        if (!result.ok) {
+            showError(result.msg || '送出失敗，請再試一次');
+            btn.textContent = '確認送出';
+            btn.disabled = false;
+            return;
+        }
+    } catch (err) {
+        showError('連線失敗，請稍後再試');
+        btn.textContent = '確認送出';
+        btn.disabled = false;
+        return;
+    }
+
+    // 成功：顯示結果畫面
+    const summary = items.map(item => {
+        const p = PRODUCTS.find(x => x.id === item.pid);
+        return p.name + '　款式 ' + item.v + '　× ' + item.qty + ' 本';
+    });
+
+    document.getElementById('form-wrap').style.display = 'none';
+    const screen = document.getElementById('success-screen');
+    screen.style.display = 'block';
+    document.getElementById('success-detail').innerHTML =
+        name + '，您已登記以下品項：<br><br>' + summary.join('<br>');
+}
+
+// ── 渲染品項 ──────────────────────────────────────────────
+function renderProducts() {
+    const container = document.getElementById('products');
+    container.innerHTML = PRODUCTS.map(p => {
+        const variantHTML = VARIANTS.map(v => [
+            '<div class="variant-card" id="card-' + p.id + '-' + v + '">',
+            '  <div class="v-img">',
+            '    <div class="v-img-text">款式 ' + v + '<br>圖片</div>',
+            '    <div class="soldout-overlay">額滿</div>',
+            '  </div>',
+            '  <div class="v-info">',
+            '    <div class="v-name">款式 ' + v + '</div>',
+            '    <div class="v-stock" id="stock-' + p.id + '-' + v + '">剩餘 10 本</div>',
+            '    <div class="qty-ctrl">',
+            '      <button class="qty-btn" id="minus-' + p.id + '-' + v + '"',
+            '        data-pid="' + p.id + '" data-v="' + v + '" data-delta="-1" disabled>&#8722;</button>',
+            '      <span class="qty-num" id="qty-' + p.id + '-' + v + '">0</span>',
+            '      <button class="qty-btn" id="plus-' + p.id + '-' + v + '"',
+            '        data-pid="' + p.id + '" data-v="' + v + '" data-delta="1">+</button>',
+            '    </div>',
+            '  </div>',
+            '</div>',
+        ].join(''));
+        return [
+            '<div class="card">',
+            '  <div class="product-title">' + p.name + '</div>',
+            '  <div class="variants">' + variantHTML.join('') + '</div>',
+            '</div>',
+        ].join('');
+    }).join('');
+
+    container.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-pid]');
+        if (!btn || btn.disabled) return;
+        adjust(btn.dataset.pid, btn.dataset.v, Number(btn.dataset.delta));
+    });
+}
+
+// ── 載入庫存 ──────────────────────────────────────────────
+async function loadStock() {
+    if (API_URL) {
+        try {
+            const res = await fetch(API_URL + '?action=stock');
+            const data = await res.json();
+            PRODUCTS.forEach(p => {
+                VARIANTS.forEach(v => {
+                    if (data[p.id] && data[p.id][v] !== undefined) {
+                        stock[p.id][v] = Number(data[p.id][v]);
+                    }
+                });
+            });
+        } catch (e) {
+            console.error('載入庫存失敗', e);
+        }
+    }
+
+    document.getElementById('loading-wrap').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderProducts();
+    refreshAll();
+}
+
+loadStock();
+</script>
+</body>
+</html>
