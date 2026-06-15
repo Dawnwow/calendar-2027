@@ -146,9 +146,7 @@
         /* 款式資訊 */
         .v-info { padding: 10px 10px 12px; }
         .v-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
-        .v-stock { font-size: 11px; color: #bbb; margin-bottom: 10px; }
-        .v-stock.low { color: #e67e22; }
-        .v-stock.empty { color: #ccc; }
+        .v-stock { display: none; }
 
         /* 數量控制 */
         .qty-ctrl { display: flex; align-items: center; gap: 8px; }
@@ -280,7 +278,7 @@ const API_URL = '';
 const LIMIT = 5;
 
 const PRODUCTS = [
-    { id: 'notebook', name: '品相筆記本' },
+    { id: 'notebook', name: '筆記本' },
     { id: 'desk_cal', name: '大桌曆' },
     { id: 'wall_cal', name: '大年曆' },
     { id: 'mini_cal', name: '小掛曆' },

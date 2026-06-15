@@ -1,5 +1,6 @@
 // 2027 年曆預購登記 — Google Apps Script 後端
 // 貼到 Google Apps Script 編輯器，部署為 Web App
+// 注意：Google Sheets「庫存」Tab 的 B 欄品項名稱，筆記本欄位填「筆記本」（不含「品相」）
 
 function doGet(e) {
   const action = (e.parameter && e.parameter.action) || 'stock';
