@@ -18,6 +18,7 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
     const name  = payload.name;
     const phone = payload.phone;
+    const note  = payload.note || '';
     const items = payload.items; // [{ pid, v, qty }]
 
     const ss         = SpreadsheetApp.getActiveSpreadsheet();
@@ -57,7 +58,7 @@ function doPost(e) {
       const key  = item.pid + '_' + item.v;
       const info = rowMap[key];
       stockSheet.getRange(info.row, 4).setValue(info.stock - item.qty);
-      orderSheet.appendRow([now, name, phone, info.pname, item.v, item.qty]);
+      orderSheet.appendRow([now, name, phone, info.pname, item.v, item.qty, note]);
     }
 
     return jsonResponse({ ok: true });

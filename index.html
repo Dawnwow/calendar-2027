@@ -67,6 +67,23 @@
         }
         .field input:focus { border-color: #8b7355; }
 
+        /* 備註欄 */
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e0ddd8;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fafaf8;
+            outline: none;
+            resize: none;
+            height: 80px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: #8b7355; }
+        .char-count { font-size: 12px; color: #bbb; text-align: right; margin-top: 6px; }
+
         /* 進度條 */
         .quota-wrap {
             display: flex;
@@ -253,6 +270,12 @@
 
             <div id="products"></div>
 
+            <div class="card">
+                <div class="card-label">備註</div>
+                <textarea id="inp-note" maxlength="20" placeholder="選填，最多 20 字"></textarea>
+                <div class="char-count"><span id="note-count">0</span> / 20</div>
+            </div>
+
             <div class="submit-area">
                 <div class="error-msg" id="error-msg"></div>
                 <button class="submit-btn" id="submit-btn" onclick="submitForm()">確認送出</button>
@@ -376,8 +399,11 @@ async function submitForm() {
     const phone = document.getElementById('inp-phone').value.trim();
     const total = totalChosen();
 
-    if (!name)       { showError('請輸入姓名'); return; }
-    if (!phone)      { showError('請輸入電話'); return; }
+    if (!name)                        { showError('請輸入姓名'); return; }
+    if (name.length < 2)              { showError('姓名至少 2 個字'); return; }
+    if (/^\d+$/.test(name))           { showError('姓名格式不正確'); return; }
+    if (!phone)                       { showError('請輸入電話'); return; }
+    if (!/^09\d{8}$/.test(phone))     { showError('請輸入正確手機號碼（09 開頭共 10 碼）'); return; }
     if (total === 0) { showError('請至少選擇 1 本'); return; }
     if (total > LIMIT) { showError('超過上限 ' + LIMIT + ' 本，請調整數量'); return; }
 
@@ -401,6 +427,8 @@ async function submitForm() {
         });
     });
 
+    const note = document.getElementById('inp-note').value.trim();
+
     const btn = document.getElementById('submit-btn');
     btn.textContent = '處理中...';
     btn.disabled = true;
@@ -409,7 +437,7 @@ async function submitForm() {
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ name, phone, items })
+            body: JSON.stringify({ name, phone, note, items })
         });
         const result = await res.json();
 
@@ -500,6 +528,10 @@ async function loadStock() {
     renderProducts();
     refreshAll();
 }
+
+document.getElementById('inp-note').addEventListener('input', function() {
+    document.getElementById('note-count').textContent = this.value.length;
+});
 
 loadStock();
 </script>
