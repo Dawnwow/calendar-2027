@@ -206,6 +206,21 @@
         .submit-btn:hover:not(:disabled) { background: #333; }
         .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* 歸零鍵（測試用） */
+        .reset-btn {
+            width: 100%; padding: 10px;
+            background: transparent;
+            color: #bbb;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .reset-btn:hover { color: #999; border-color: #bbb; }
+
         /* 成功畫面 */
         .success-screen {
             display: none;
@@ -279,6 +294,7 @@
             <div class="submit-area">
                 <div class="error-msg" id="error-msg"></div>
                 <button class="submit-btn" id="submit-btn" onclick="submitForm()">確認送出</button>
+                <button class="reset-btn" onclick="resetForm()">歸零（測試用）</button>
             </div>
 
         </div>
@@ -503,6 +519,22 @@ function renderProducts() {
         if (!btn || btn.disabled) return;
         adjust(btn.dataset.pid, btn.dataset.v, Number(btn.dataset.delta));
     });
+}
+
+// ── 歸零（測試用） ────────────────────────────────────────
+function resetForm() {
+    PRODUCTS.forEach(p => VARIANTS.forEach(v => { chosen[p.id][v] = 0; }));
+    document.getElementById('inp-name').value  = '';
+    document.getElementById('inp-phone').value = '';
+    document.getElementById('inp-note').value  = '';
+    document.getElementById('note-count').textContent = '0';
+    clearError();
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '確認送出';
+    btn.disabled = false;
+    document.getElementById('success-screen').style.display = 'none';
+    document.getElementById('form-wrap').style.display = 'block';
+    refreshAll();
 }
 
 // ── 載入庫存 ──────────────────────────────────────────────
