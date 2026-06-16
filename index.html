@@ -294,7 +294,7 @@
             <div class="submit-area">
                 <div class="error-msg" id="error-msg"></div>
                 <button class="submit-btn" id="submit-btn" onclick="submitForm()">確認送出</button>
-                <button class="reset-btn" onclick="resetForm()">歸零（測試用）</button>
+                <button class="reset-btn" onclick="resetAll()">歸零（測試用）</button>
             </div>
 
         </div>
@@ -522,7 +522,30 @@ function renderProducts() {
 }
 
 // ── 歸零（測試用） ────────────────────────────────────────
-function resetForm() {
+async function resetAll() {
+    if (!confirm('確定清零所有訂單紀錄並還原庫存？此操作無法復原。')) return;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'reset' })
+        });
+        const result = await res.json();
+        if (!result.ok) {
+            alert('清零失敗：' + (result.msg || '未知錯誤'));
+            return;
+        }
+    } catch (err) {
+        alert('連線失敗，請稍後再試');
+        return;
+    }
+
+    await loadStock();
+    resetUI();
+}
+
+function resetUI() {
     PRODUCTS.forEach(p => VARIANTS.forEach(v => { chosen[p.id][v] = 0; }));
     document.getElementById('inp-name').value  = '';
     document.getElementById('inp-phone').value = '';

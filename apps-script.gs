@@ -16,6 +16,12 @@ function doPost(e) {
 
   try {
     const payload = JSON.parse(e.postData.contents);
+
+    if (payload.action === 'reset') {
+      const result = doReset();
+      return jsonResponse(result);
+    }
+
     const name  = payload.name;
     const phone = payload.phone;
     const note  = payload.note || '';
@@ -68,6 +74,27 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function doReset() {
+  const ss         = SpreadsheetApp.getActiveSpreadsheet();
+  const stockSheet = ss.getSheetByName('庫存');
+  const orderSheet = ss.getSheetByName('訂單');
+
+  // E 欄（初始庫存）覆蓋回 D 欄（現有庫存）
+  const lastRow = stockSheet.getLastRow();
+  for (let i = 2; i <= lastRow; i++) {
+    const initStock = stockSheet.getRange(i, 5).getValue();
+    stockSheet.getRange(i, 4).setValue(initStock);
+  }
+
+  // 清空訂單（保留標題列）
+  const orderLastRow = orderSheet.getLastRow();
+  if (orderLastRow > 1) {
+    orderSheet.deleteRows(2, orderLastRow - 1);
+  }
+
+  return { ok: true };
 }
 
 function getStock() {
