@@ -264,10 +264,6 @@
                     <label>姓名</label>
                     <input type="text" id="inp-name" placeholder="請輸入姓名">
                 </div>
-                <div class="field">
-                    <label>電話</label>
-                    <input type="tel" id="inp-phone" placeholder="請輸入手機號碼">
-                </div>
             </div>
 
             <div class="card">
@@ -412,14 +408,11 @@ function adjust(pid, v, delta) {
 // ── 送出 ──────────────────────────────────────────────────
 async function submitForm() {
     const name  = document.getElementById('inp-name').value.trim();
-    const phone = document.getElementById('inp-phone').value.trim();
     const total = totalChosen();
 
     if (!name)                        { showError('請輸入姓名'); return; }
     if (name.length < 2)              { showError('姓名至少 2 個字'); return; }
     if (/^\d+$/.test(name))           { showError('姓名格式不正確'); return; }
-    if (!phone)                       { showError('請輸入電話'); return; }
-    if (!/^09\d{8}$/.test(phone))     { showError('請輸入正確手機號碼（09 開頭共 10 碼）'); return; }
     if (total === 0) { showError('請至少選擇 1 本'); return; }
     if (total > LIMIT) { showError('超過上限 ' + LIMIT + ' 本，請調整數量'); return; }
 
@@ -453,7 +446,7 @@ async function submitForm() {
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ name, phone, note, items })
+            body: JSON.stringify({ name, note, items })
         });
         const result = await res.json();
 
@@ -548,7 +541,6 @@ async function resetAll() {
 function resetUI() {
     PRODUCTS.forEach(p => VARIANTS.forEach(v => { chosen[p.id][v] = 0; }));
     document.getElementById('inp-name').value  = '';
-    document.getElementById('inp-phone').value = '';
     document.getElementById('inp-note').value  = '';
     document.getElementById('note-count').textContent = '0';
     clearError();
