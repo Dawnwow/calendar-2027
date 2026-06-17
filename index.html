@@ -507,11 +507,6 @@ function renderProducts() {
         ].join('');
     }).join('');
 
-    container.addEventListener('click', function(e) {
-        const btn = e.target.closest('[data-pid]');
-        if (!btn || btn.disabled) return;
-        adjust(btn.dataset.pid, btn.dataset.v, Number(btn.dataset.delta));
-    });
 }
 
 // ── 歸零（測試用） ────────────────────────────────────────
@@ -578,6 +573,12 @@ async function loadStock() {
 
 document.getElementById('inp-note').addEventListener('input', function() {
     document.getElementById('note-count').textContent = this.value.length;
+});
+
+document.getElementById('products').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-pid]');
+    if (!btn || btn.disabled) return;
+    adjust(btn.dataset.pid, btn.dataset.v, Number(btn.dataset.delta));
 });
 
 loadStock();
